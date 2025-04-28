@@ -1,0 +1,176 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>SIMULAZIONE DELL'ALLUNAGGIO</title>
+  <style>
+    body { background-color: black; font-family: 'Times New Roman', Times, serif; color:red; text-align: center; }
+    table, th  {color:whitesmoke; }
+    caption {color: red;}
+    button {background-color: gray; }
+    input {background-color: lightgray;}
+  </style>
+</head>
+<body>
+  <h1>Simulazione dell'allunaggio</h1>
+  <br>
+  <table style="margin-left: auto; margin-right: auto;">
+    <caption>DATI</caption>
+    <tr>
+      <th> MASSA</th> <th> VELOCITA'</th>
+    </tr>
+    <tr>
+      <td><input type="number" placeholder=" kg" id="massa" value="15"></td>
+      <td><input type="number" placeholder=" m/s" id="velocità" value="10"></td>
+    </tr>
+    <tr>
+      <td colspan="2" style="padding-top: 10px;">
+        <div style="display: flex; justify-content: center;">
+          <button id="simulazione" >Avvia simulazione</button>
+          <button id="stop">Stop simulazione </button>
+        </div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- Output del tempo -->
+  <div id="output" style="color:white; font-size:20px; margin-top:10px;"></div>
+
+  <script>
+    // Creazione canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = 400;
+    canvas.height = 300;
+    canvas.style.background = 'white';
+    canvas.style.display = 'block';
+    canvas.style.margin = '30px auto';
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+
+    // Costanti fisiche
+    const ml = 7.348 * Math.pow(10,22); // massa lunare
+    const distanza = 3.84 * Math.pow(10,8); // distanza terra-luna
+    const G = 6.674 * Math.pow(10,-11); // costante gravitazionale
+
+    // Variabili della simulazione
+    let x = 198;
+    let y = 27;
+    let radius = 20;
+    let v = 0;
+    let a = 1.62;
+    let intervallo = null;
+    let tempo = 0;
+
+    // Disegna la navetta e il suolo
+    function drawShuttle() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      // Draw main body
+      ctx.save();
+      ctx.translate(x, y);
+      // Body
+      ctx.beginPath();
+      ctx.moveTo(0, -radius);
+      ctx.lineTo(12, radius);
+      ctx.lineTo(-12, radius);
+      ctx.closePath();
+      ctx.fillStyle = '#cccccc';
+      ctx.fill();
+      ctx.strokeStyle = '#888';
+      ctx.stroke();
+
+      // Cockpit
+      ctx.beginPath();
+      ctx.ellipse(0, -radius/2, 7, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#3399ff';
+      ctx.fill();
+      ctx.strokeStyle = '#225577';
+      ctx.stroke();
+
+      // Left booster
+      ctx.beginPath();
+      ctx.moveTo(-10, radius);
+      ctx.lineTo(-18, radius + 18);
+      ctx.lineTo(-6, radius);
+      ctx.closePath();
+      ctx.fillStyle = '#999';
+      ctx.fill();
+      ctx.stroke();
+
+      // Right booster
+      ctx.beginPath();
+      ctx.moveTo(10, radius);
+      ctx.lineTo(18, radius + 18);
+      ctx.lineTo(6, radius);
+      ctx.closePath();
+      ctx.fillStyle = '#999';
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.restore();
+
+      // Draw ground
+      ctx.fillStyle = "gray";
+      ctx.fillRect(0, canvas.height - 20, canvas.width, 20);
+    }
+
+    // Simulazione
+    function funzionesimula() {
+      // Prendi i dati dagli input
+      let m = parseFloat(document.getElementById("massa").value);
+       v = parseFloat(document.getElementById("velocità").value);
+      
+       document.getElementById("simulazione").innerText = "avvia simulazione";
+       if ( m <= 0) {
+          alert("Inserisci una massa maggiore di zero!");
+          return;
+        }
+    
+      let dt = 0.1; // passo temporale in secondi
+
+      // Reset posizione iniziale e tempo
+      y = 27;
+      tempo = 0;
+      drawShuttle();
+      document.getElementById("output").innerText = "Tempo trascorso: 0 s";
+
+      // Ferma eventuali simulazioni precedenti
+      if (intervallo) clearInterval(intervallo);
+
+      intervallo = setInterval (function() { // setta un intervallo che esegue questa funzione ogni 100 millisecondi
+        v += a * dt;
+        y += v * dt;
+        tempo += dt;
+      
+        drawShuttle();
+        document.getElementById("output").innerText = "Tempo trascorso: " + tempo.toFixed(2) + " s";
+
+        // Se i booster toccano il suolo, ferma la simulazione
+        if (y + radius + 18 >= canvas.height - 20) {
+          y = canvas.height - 20 - radius - 18;
+          drawShuttle();
+          clearInterval(intervallo);
+          document.getElementById("output").innerText = "Atterraggio! Tempo totale: " + tempo.toFixed(2) + " s";
+          alert( "simulazione terminata!"+  "                                     tempo trascorso: " + tempo.toFixed(2) + "s");
+        }
+      }, 100);
+    }
+   
+  document.getElementById("stop").onclick = function() {
+    if (intervallo) {
+     clearInterval(intervallo);
+     intervallo = null;
+     document.getElementById("output").innerText = "Simulazione interrotta!";
+     alert("Simulazione interrotta!");
+     document.getElementById("simulazione").innerText = "riavvia";
+   }
+};
+    // Avvia la simulazione al click sul bottone
+    document.getElementById("simulazione").onclick = funzionesimula;
+
+    // Disegna la pallina all'avvio
+    drawShuttle();
+  </script>
+</body>
+</html>
